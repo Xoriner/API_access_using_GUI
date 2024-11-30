@@ -25,7 +25,7 @@ public class Main {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Living Space Data");
+            JFrame frame = new JFrame("Przecietna powierzchnia uzytkowa 1 mieszkania");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(800, 600);
             frame.setLayout(new BorderLayout());
@@ -42,6 +42,7 @@ public class Main {
             JTextField toField = new JTextField();
             JButton fetchButton = new JButton("Pobierz");
 
+
             fromField.addFocusListener(new FocusAdapter() {
                 @Override
                 public void focusLost(FocusEvent e) {
@@ -50,6 +51,7 @@ public class Main {
                     }
                 }
             });
+
 
             panel.add(provinceLabel);
             panel.add(provinceComboBox);
@@ -76,18 +78,25 @@ public class Main {
                         String selectedProvince = (String) provinceComboBox.getSelectedItem();
                         List<AvgLivingSpace> data;
                         if (yearTo == yearFrom) {
+                            StringBuilder resultText = new StringBuilder();
+                            int provinceId = getProvinceIdByName(selectedProvince);
                             data = apiClient.getAvgLivingSpace(yearFrom);
-                            // CHANGE THIS
-                            resultArea.setText(data.stream()
-                                    .filter(avgLivingSpace -> avgLivingSpace.getProvinceId() == getProvinceIdByName(selectedProvince))
-                                    .map(avgLivingSpace -> avgLivingSpace.getYear() + ": " + avgLivingSpace.getValue())
-                                    .collect(Collectors.joining("\n")));
+                            for (AvgLivingSpace avgLivingSpace : data) {
+                                if (avgLivingSpace.getProvinceId() == provinceId) {
+                                    resultText.append(avgLivingSpace.getYear())
+                                            .append(": ")
+                                            .append(avgLivingSpace.getValue())
+                                            .append("\n");
+                                }
+                            }
+                            resultArea.setText(resultText.toString());
+                            resultArea.setEditable(false);
                         } else {
                             data = apiClient.getAvgLivingSpace(yearFrom, yearTo);
-                            displayChart(resultArea, selectedProvince, data, yearFrom, yearTo);
+                            displayChart(resultArea, selectedProvince, data);
                         }
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(frame, "Please enter valid years.", "Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (IllegalArgumentException ex) {
+                        JOptionPane.showMessageDialog(frame, "Wprowadz poprawne lata (miedzy 2010 a 2023).", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             });
@@ -103,7 +112,7 @@ public class Main {
     }
 
 
-    private static void displayChart(JTextArea resultArea, String selectedProvince, List<AvgLivingSpace> data, int yearFrom, int yearTo) {
+    private static void displayChart(JTextArea resultArea, String selectedProvince, List<AvgLivingSpace> data) {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
         // Sort the data by year
@@ -115,7 +124,7 @@ public class Main {
         for (AvgLivingSpace avgLivingSpace : data) {
             if (avgLivingSpace.getProvinceId() == getProvinceIdByName(selectedProvince)) {
                 double value = avgLivingSpace.getValue();
-                dataset.addValue(value, "Living Space", String.valueOf(avgLivingSpace.getYear()));
+                dataset.addValue(value, "Powierzchnia użytkowa", String.valueOf(avgLivingSpace.getYear()));
                 if (value < minValue) {
                     minValue = value;
                 }
@@ -126,16 +135,17 @@ public class Main {
         }
 
         JFreeChart lineChart = ChartFactory.createLineChart(
-                "Average Living Space",
+                "Przecietna powierzchnia uzytkowa 1 mieszkania",
                 "Rok",
-                "Wartość",
+                "Wartość [m²]",
                 dataset,
                 PlotOrientation.VERTICAL,
                 true, true, false);
 
         var plot = lineChart.getCategoryPlot();
         var rangeAxis = plot.getRangeAxis();
-        rangeAxis.setRange(minValue - 10, maxValue + 10);
+        // Getting nice axis range
+        rangeAxis.setRange(minValue - (maxValue - minValue) * 0.1, maxValue + (maxValue - minValue) * 0.1);
 
         ChartPanel chartPanel = new ChartPanel(lineChart);
         chartPanel.setPreferredSize(new Dimension(800, 400));
@@ -157,4 +167,5 @@ public class Main {
         }
         throw new IllegalArgumentException("Province not found: " + provinceName);
     }
+
 }
