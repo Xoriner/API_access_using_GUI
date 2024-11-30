@@ -45,6 +45,16 @@ public class ApiClient {
         return provinces;
     }
 
+    public int getProvinceIdByName(String provinceName) {
+        List<Province> provinceList = getProvinces();
+        for (Province province : provinceList) {
+            if (province.getProvinceName().equals(provinceName)) {
+                return province.getProvinceId();
+            }
+        }
+        throw new IllegalArgumentException("Wojewodztwo (province) nie znaleziono: " + provinceName);
+    }
+
     public List<AvgLivingSpace> getAvgLivingSpace(int year) {
         List<AvgLivingSpace> avgLivingSpaces = new ArrayList<>();
         try {
