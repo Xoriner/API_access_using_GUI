@@ -70,14 +70,19 @@ public class ApiClient {
         return avgLivingSpaces;
     }
 
-    public Map<Integer, List<AvgLivingSpace>> getAvgLivingSpace(Integer fromYear, Integer toYear) {
+    public List<AvgLivingSpace> getAvgLivingSpace(Integer fromYear, Integer toYear) {
         if (fromYear > toYear) {
             throw new IllegalArgumentException("fromYear cannot be greater than toYear");
         }
 
-        Map<Integer, List<AvgLivingSpace>> avgLivingSpaces = new HashMap<>();
+        List<AvgLivingSpace> avgLivingSpaces = new ArrayList<>();
         for (int year = fromYear; year <= toYear; year++) {
-            avgLivingSpaces.put(year, getAvgLivingSpace(year));
+            avgLivingSpaces.addAll(getAvgLivingSpace(year));
+            try {
+                Thread.sleep(200); //5 request per second
+            } catch (InterruptedException  e)   {
+                e.printStackTrace();
+            }
         }
 
         return avgLivingSpaces;
