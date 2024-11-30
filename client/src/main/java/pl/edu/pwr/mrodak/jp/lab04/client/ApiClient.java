@@ -33,7 +33,8 @@ public class ApiClient {
 
             // Parse JSON response using Jackson
             ObjectMapper objectMapper = new ObjectMapper();
-            provinces = objectMapper.readValue(response.body(), new TypeReference<List<Province>>() {});
+            provinces = objectMapper.readValue(response.body(), new TypeReference<List<Province>>() {
+            });
 
         } catch (Exception e) {
             // exception handling
@@ -75,12 +76,20 @@ public class ApiClient {
             throw new IllegalArgumentException("fromYear cannot be greater than toYear");
         }
 
+        if (fromYear < 2010) {
+            throw new IllegalArgumentException("fromYear cannot be less than 2010");
+        }
+
+        if (toYear > 2023) {
+            throw new IllegalArgumentException("toYear cannot be greater than 2023");
+        }
+
         List<AvgLivingSpace> avgLivingSpaces = new ArrayList<>();
         for (int year = fromYear; year <= toYear; year++) {
             avgLivingSpaces.addAll(getAvgLivingSpace(year));
             try {
                 Thread.sleep(200); //5 request per second
-            } catch (InterruptedException  e)   {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }

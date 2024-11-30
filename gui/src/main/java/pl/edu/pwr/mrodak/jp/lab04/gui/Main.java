@@ -18,97 +18,99 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Main {
     private static ApiClient apiClient = new ApiClient();
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Przecietna powierzchnia uzytkowa 1 mieszkania");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(800, 600);
-            frame.setLayout(new BorderLayout());
+        SwingUtilities.invokeLater(Main::createAndShowGUI);
+    };
 
-            JPanel panel = new JPanel();
-            panel.setLayout(new GridLayout(4, 2));
-            panel.setBorder(new EmptyBorder(10, 10, 10, 10)); // Add padding
+    private static void createAndShowGUI() {
+        JFrame frame = new JFrame("Przecietna powierzchnia uzytkowa 1 mieszkania");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLayout(new BorderLayout());
 
-            JLabel provinceLabel = new JLabel("Region:");
-            JComboBox<String> provinceComboBox = new JComboBox<>();
-            JLabel fromLabel = new JLabel("Rok od:");
-            JTextField fromField = new JTextField();
-            JLabel toLabel = new JLabel("Rok do:");
-            JTextField toField = new JTextField();
-            JButton fetchButton = new JButton("Pobierz");
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(4, 2));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10)); // Add padding
+
+        JLabel provinceLabel = new JLabel("Region:");
+        JComboBox<String> provinceComboBox = new JComboBox<>();
+        JLabel fromLabel = new JLabel("Rok od:");
+        JTextField fromField = new JTextField();
+        JLabel toLabel = new JLabel("Rok do:");
+        JTextField toField = new JTextField();
+        JButton fetchButton = new JButton("Pobierz");
 
 
-            fromField.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusLost(FocusEvent e) {
-                    if (toField.getText().isEmpty()) {
-                        toField.setText(fromField.getText());
-                    }
+        fromField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (toField.getText().isEmpty()) {
+                    toField.setText(fromField.getText());
                 }
-            });
-
-
-            panel.add(provinceLabel);
-            panel.add(provinceComboBox);
-            panel.add(fromLabel);
-            panel.add(fromField);
-            panel.add(toLabel);
-            panel.add(toField);
-            panel.add(fetchButton);
-
-            JTextArea resultArea = new JTextArea();
-            resultArea.setBorder(new EmptyBorder(10, 10, 10, 10));
-            resultArea.setEditable(false);
-            JScrollPane scrollPane = new JScrollPane(resultArea);
-
-            frame.add(panel, BorderLayout.NORTH);
-            frame.add(scrollPane, BorderLayout.CENTER);
-
-            fetchButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        int yearFrom = Integer.parseInt(fromField.getText());
-                        int yearTo = Integer.parseInt(toField.getText());
-                        String selectedProvince = (String) provinceComboBox.getSelectedItem();
-                        List<AvgLivingSpace> data;
-                        if (yearTo == yearFrom) {
-                            StringBuilder resultText = new StringBuilder();
-                            int provinceId = getProvinceIdByName(selectedProvince);
-                            data = apiClient.getAvgLivingSpace(yearFrom);
-                            for (AvgLivingSpace avgLivingSpace : data) {
-                                if (avgLivingSpace.getProvinceId() == provinceId) {
-                                    resultText.append(avgLivingSpace.getYear())
-                                            .append(": ")
-                                            .append(avgLivingSpace.getValue())
-                                            .append("\n");
-                                }
-                            }
-                            resultArea.setText(resultText.toString());
-                            resultArea.setEditable(false);
-                        } else {
-                            data = apiClient.getAvgLivingSpace(yearFrom, yearTo);
-                            displayChart(resultArea, selectedProvince, data);
-                        }
-                    } catch (IllegalArgumentException ex) {
-                        JOptionPane.showMessageDialog(frame, "Wprowadz poprawne lata (miedzy 2010 a 2023).", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            });
-
-            // Fetch initial data
-            List<Province> provinceList = apiClient.getProvinces();
-            for (Province province : provinceList) {
-                provinceComboBox.addItem(province.getProvinceName());
             }
-
-            frame.setVisible(true);
         });
+
+
+        panel.add(provinceLabel);
+        panel.add(provinceComboBox);
+        panel.add(fromLabel);
+        panel.add(fromField);
+        panel.add(toLabel);
+        panel.add(toField);
+        panel.add(fetchButton);
+
+        JTextArea resultArea = new JTextArea();
+        resultArea.setBorder(new EmptyBorder(10, 10, 10, 10));
+        resultArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(resultArea);
+
+        frame.add(panel, BorderLayout.NORTH);
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        fetchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int yearFrom = Integer.parseInt(fromField.getText());
+                    int yearTo = Integer.parseInt(toField.getText());
+                    String selectedProvince = (String) provinceComboBox.getSelectedItem();
+                    List<AvgLivingSpace> data;
+                    if (yearTo == yearFrom) {
+                        StringBuilder resultText = new StringBuilder();
+                        int provinceId = getProvinceIdByName(selectedProvince);
+                        data = apiClient.getAvgLivingSpace(yearFrom);
+                        for (AvgLivingSpace avgLivingSpace : data) {
+                            if (avgLivingSpace.getProvinceId() == provinceId) {
+                                resultText.append(avgLivingSpace.getYear())
+                                        .append(": ")
+                                        .append(avgLivingSpace.getValue())
+                                        .append("\n");
+                            }
+                        }
+                        resultArea.setText(resultText.toString());
+                        resultArea.setEditable(false);
+                    } else {
+                        data = apiClient.getAvgLivingSpace(yearFrom, yearTo);
+                        displayChart(resultArea, selectedProvince, data);
+                    }
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(frame, "Wprowadz poprawne lata (miedzy 2010 a 2023).", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // Fetch initial data
+        List<Province> provinceList = apiClient.getProvinces();
+        for (Province province : provinceList) {
+            provinceComboBox.addItem(province.getProvinceName());
+        }
+
+        frame.setVisible(true);
+
     }
 
 
