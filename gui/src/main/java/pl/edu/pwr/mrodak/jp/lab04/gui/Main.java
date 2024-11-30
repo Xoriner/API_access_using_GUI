@@ -24,7 +24,7 @@ public class Main {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Main::createAndShowGUI);
-    };
+    }
 
     private static void createAndShowGUI() {
         JFrame frame = new JFrame("Przecietna powierzchnia uzytkowa 1 mieszkania");
@@ -88,11 +88,17 @@ public class Main {
                                 resultText.append(avgLivingSpace.getYear())
                                         .append(": ")
                                         .append(avgLivingSpace.getValue())
-                                        .append("\n");
+                                        .append(" m²\n");
                             }
                         }
+                        resultArea.removeAll();
                         resultArea.setText(resultText.toString());
+                        resultArea.setFont(new Font("Monospaced", Font.PLAIN, 20)); // Set a larger font
+                        resultArea.setPreferredSize(new Dimension(800, 400)); // Set preferred size
+                        resultArea.setFocusable(false); // Make non-focusable
                         resultArea.setEditable(false);
+                        resultArea.revalidate();
+                        resultArea.repaint();
                     } else {
                         data = apiClient.getAvgLivingSpace(yearFrom, yearTo);
                         displayChart(resultArea, selectedProvince, data);
